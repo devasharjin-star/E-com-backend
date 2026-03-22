@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import User from "../../models/userModel.js"
+import User from '../../../models/userModel.js'
 import jwt from 'jsonwebtoken'
 
 export const loginController = async (req, res) => {
@@ -10,7 +10,7 @@ export const loginController = async (req, res) => {
     const user = await User.findOne({ email: email })
 
     if (!user) {
-        res.status(409).json({
+       return res.status(409).json({
             success: false,
             message: "user id does not exist"
         })
@@ -19,7 +19,7 @@ export const loginController = async (req, res) => {
     const checkpass = await bcrypt.compare(password, user.password)
 
     if (!checkpass) {
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: "password mismatch"
         })
@@ -28,6 +28,7 @@ export const loginController = async (req, res) => {
     const token =await jwt.sign(
         {
             id: user.id,
+            name:user.name,
             role: user.role
         },
         process.env.JWT_SECRET_KEY,
