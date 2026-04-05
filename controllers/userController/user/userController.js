@@ -2,7 +2,7 @@ import User from '../../../models/userModel.js'
 import bcrypt from 'bcryptjs'
 
 export const profile = async (req, res) => {
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
 
     res.status(200).json({
         success: true,
@@ -15,7 +15,7 @@ export const updatePassword = async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body
 
 
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
 
     const ischecked = await bcrypt.compare(oldPassword, user.password)
 
@@ -47,7 +47,7 @@ export const updatePassword = async (req, res) => {
 export const updateProfile = async (req, res) => {
     const { name, email } = req.body
     const data = { name, email }
-    const user = req.user.id
+    const user = req.user._id
     const result = await User.findByIdAndUpdate(user, data, { new: true, runValidators: true })
 
     res.status(200).json({

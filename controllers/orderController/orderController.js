@@ -13,7 +13,7 @@ export const addOrder=async(req,res)=>{
         taxPrice,
         shippingPrice,
         totalPrice,
-        user:req.user.id,
+        user:req.user._id,
         paidAt:Date.now()
     })
 
@@ -24,7 +24,7 @@ export const addOrder=async(req,res)=>{
 }
 
 export const getAllOrder=async(req,res)=>{
-    const user=req.user.id
+    const user=req.user._id
 
     const orders=await Order.find({user})
 

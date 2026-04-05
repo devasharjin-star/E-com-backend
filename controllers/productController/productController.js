@@ -1,7 +1,7 @@
 import Product from "../../models/productModel.js";
 
 export const addProduct = async (req, res) => {
-    req.body.user = req.user.id
+    req.body.user = req.user._id
     const product = await Product.create(req.body)
 
     if (!product) {
@@ -17,29 +17,30 @@ export const addProduct = async (req, res) => {
 }
 
 export const getProducts = async (req, res) => {
-    const totalProducts = await Product.countDocuments()
-    const limit = req.query.limit || 4
-    const totalpage = Math.ceil(totalProducts / limit)
-    const currentpage = req.query.page || 1
-    const skip = (currentpage - 1) * limit
+    const resultPerPage = Number(req.query.limit) || 4
+    const currentPage = Number(req.query.page) || 1
+    const skip = (currentPage - 1) * resultPerPage
 
-    const { key, cat } = req.query
+    const { keyword, category } = req.query
     const query = {}
-    if (key) {
+    if (keyword) {
         query.name = {
-            $regex: key,
+            $regex: keyword,
             $options: "i"
         }
     }
-    if (cat) {
+    if (category) {
         query.category = {
-            $regex: req.query.cat,
+            $regex: req.query.category,
             $options: 'i'
         }
     }
-    const products = await Product.find(query).limit(limit).skip(skip)
+    const products = await Product.find(query).limit(resultPerPage).skip(skip)
 
-    if (!products) {
+    const productCount = products.length
+    const totalPage = Math.ceil(productCount / resultPerPage)
+
+    if (products.lenth===0) {
         return res.status(400).json({
             success: true,
             message: "product details wrong"
@@ -47,10 +48,11 @@ export const getProducts = async (req, res) => {
     }
     res.status(200).json({
         success: true,
-        totalProducts,
-        totalpage,
-        currentpage,
-        products
+        productCount,
+        resultPerPage,
+        currentPage,
+        products,
+        totalPage
     })
 
 }
@@ -67,7 +69,7 @@ export const getSingleProduct = async (req, res) => {
     }
     res.status(200).json({
         success: true,
-        product
+        product:product
     })
 }
 
@@ -114,8 +116,9 @@ export const reviewsController = async (req, res) => {
         const { productId, rating, comment } = req.body
 
         const review = {
-            user: req.user.id,
+            user: req.user._id,
             name: req.user.name,
+            avatar:req.user.avatar.url,
             rating: Number(rating),
             comment
         }
@@ -130,7 +133,7 @@ export const reviewsController = async (req, res) => {
         }
 
         const check = product.reviews.find(
-            r => r.user?.toString() === req.user.id.toString()
+            r => r.user?.toString() === req.user._id.toString()
         )
         if (check) {
             check.rating = Number(rating),
@@ -146,7 +149,7 @@ export const reviewsController = async (req, res) => {
         product.reviews.forEach((review) => {
             sum = sum + review.rating
         })
-        product.ratings = Number(sum / product.reviews.length)
+        product.ratings = Number(sum / product.reviews.length).toFixed(1)
 
         await product.save({ validateBeforeSave: false })
 

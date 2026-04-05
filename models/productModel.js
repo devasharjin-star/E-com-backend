@@ -14,6 +14,10 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: [true, "please enter product price"]
     },
+    mrp:{
+        type:Number,
+        required:[true,'Please enter product mrp price']
+    },
     ratings: {
         type: Number,
         default: 0
@@ -51,8 +55,12 @@ const productSchema = new mongoose.Schema({
                 required:true
             },
             name:{type:String,required:true},
+            avatar:{type:String},
             rating:{type:Number,required:true},
-            comment:{type:String,required:true}
+            comment:{type:String,required:true},
+            createdAt:{type:Date,
+                default:Date.now
+            }
         }
     ],
     user:{
