@@ -1,13 +1,21 @@
 import User from '../../../models/userModel.js'
 import bcrypt from 'bcryptjs'
+import {v2 as cloudinary} from 'cloudinary'
 
 export const profile = async (req, res) => {
+    try{
     const user = await User.findById(req.user._id)
 
     res.status(200).json({
         success: true,
         user
     })
+}catch(e){
+    res.status(401).json({
+        success:false,
+        message:'something went wrong'
+    })
+}
 }
 
 
@@ -44,16 +52,57 @@ export const updatePassword = async (req, res) => {
 }
 
 
+
+
 export const updateProfile = async (req, res) => {
-    const { name, email } = req.body
-    const data = { name, email }
-    const user = req.user._id
-    const result = await User.findByIdAndUpdate(user, data, { new: true, runValidators: true })
+    try {
+        const { name, email, avatar } = req.body;
 
-    res.status(200).json({
-        success: true,
-        message: 'profile updated successfully',
-        result
-    })
+        const user = await User.findById(req.user._id);
 
-}
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // update name & email
+        if (name) user.name = name;
+        if (email) user.email = email;
+
+        // update avatar
+        if (avatar) {
+            // delete old image
+            if (user.avatar?.public_id) {
+                await cloudinary.uploader.destroy(user.avatar.public_id);
+            }
+
+            // upload new image (base64)
+            const result = await cloudinary.uploader.upload(avatar, {
+                folder: "E-Commerce",
+                width: 150,
+                crop: "scale"
+            });
+
+            user.avatar = {
+                public_id: result.public_id,
+                url: result.secure_url
+            };
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message || "Server error"
+        });
+    }
+};

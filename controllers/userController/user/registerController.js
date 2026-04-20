@@ -1,8 +1,9 @@
 import User from '../../../models/userModel.js'
 import bcrypt from 'bcryptjs'
+import {v2 as cloudinary} from 'cloudinary'
 
 export const registerController = async (req, res) => {
-    const {name,email,password}=req.body;
+    const {name,email,password,avatar}=req.body;
 
     try{
         const emailexist=await User.findOne({email:email})
@@ -16,19 +17,23 @@ export const registerController = async (req, res) => {
         const salt=await bcrypt.genSalt(10)
         const hashedpassword=await bcrypt.hash(password,salt)
 
+        const uploadImage=await cloudinary.uploader.upload(avatar,{folder:"E-commerce"})
+
         const result=await User.create({
             name,
             email,
             password:hashedpassword,
             avatar:{
-                public_id:"temp",
-                url:"temp"
+                public_id:uploadImage.public_id,
+                url:uploadImage.secure_url
             }
         })
 
         if(result){
             res.status(200).json({
-                data:result
+                user:result,
+                success:true,
+                message:"Registered Successfully"
             })
         }
     }catch(e){

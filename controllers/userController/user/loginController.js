@@ -25,7 +25,7 @@ export const loginController = async (req, res) => {
         })
     }
 
-    const token =await jwt.sign(
+    const token = jwt.sign(
         {
             id: user.id,
             name:user.name,
@@ -38,12 +38,15 @@ export const loginController = async (req, res) => {
 
     res.cookie("token", token, { httpOnly: true })
 
-    res.status(200).json({
-        success:true,
-        data:user,
-        token
-    })
+   res.status(200).json({
+    success: true,
+    user: user,                  
+    token
+})
 }catch(e){
     console.log(e)
+    res.status(500).json({
+        message:"server error"
+    })
 }
 }

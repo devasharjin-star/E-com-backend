@@ -17,7 +17,7 @@ export const addProduct = async (req, res) => {
 }
 
 export const getProducts = async (req, res) => {
-    const resultPerPage = Number(req.query.limit) || 4
+    const resultPerPage = Number(req.query.limit) || 6
     const currentPage = Number(req.query.page) || 1
     const skip = (currentPage - 1) * resultPerPage
 
@@ -37,13 +37,14 @@ export const getProducts = async (req, res) => {
     }
     const products = await Product.find(query).limit(resultPerPage).skip(skip)
 
-    const productCount = products.length
+    const productCount = await Product.countDocuments(query)
     const totalPage = Math.ceil(productCount / resultPerPage)
 
-    if (products.lenth===0) {
+    if (products.length===0) {
         return res.status(400).json({
             success: true,
-            message: "product details wrong"
+            message: "No Products Found",
+            products:[]
         })
     }
     res.status(200).json({
